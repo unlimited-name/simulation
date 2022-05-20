@@ -1,0 +1,10 @@
+The wavelength used:
+850nm
+
+Temperature for CF4:
+130K
+
+OJ: 
+Height: 0.22225
+dh = 0.03666
+r=0.12235180
