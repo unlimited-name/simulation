@@ -141,6 +141,7 @@ def detector_construction():
     g.add_solid(Head_solid, rot_head3, pos_head3)
 
     # head reflectors
+    """
     Href_mesh = stl.mesh_from_stl('head_ref.stl')
     Href_solid = Solid(Href_mesh, PTFE, CF4, shiny_surface)
     pos_href1 = pos_head1
@@ -149,6 +150,7 @@ def detector_construction():
     g.add_solid(Href_solid, rot_head1, pos_href1)
     g.add_solid(Href_solid, rot_head2, pos_href2)
     g.add_solid(Href_solid, rot_head3, pos_href3)
+    """
 
     # dome reflectors
     # 8 pieces, thus treated in a for loop
