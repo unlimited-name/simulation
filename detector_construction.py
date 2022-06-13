@@ -58,19 +58,33 @@ vacuum.set('scattering_length', 1e6)
 
 CF4 = Material('CF4')
 CF4.set('refractive_index', 1.0004823)
+CF4.set('absorption_length',1e6)
+CF4.set('scattering_length',1e6)
 
-SSteel = Material('SSteel')
-#SSteel.set('absorption_length',np.array([(850, 1e-6)]))
+ssteel = Material('SSteel')
+ssteel.set('refractive_index', 1.0)
+ssteel.set('absorption_length',1e6)
+ssteel.set('scattering_length',1e6)
 
 # these 2 are not actually used
 PTFE = Material('PTFE')
+PTFE.set('refractive_index', 1.0)
+PTFE.set('absorption_length',1e6)
+PTFE.set('scattering_length',1e6)
 sapphire = Material('sapphire')
+sapphire.set('refractive_index', 1.0)
+sapphire.set('absorption_length',1e6)
+sapphire.set('scattering_length',1e6)
 
 quartz = Material('quartz')
 quartz.set('refractive_index', 1.49)
+quartz.set('absorption_length',1e6)
+quartz.set('scattering_length',1e6)
 
 LAr = Material('LAr')
 LAr.set('refractive_index', 2.1)
+LAr.set('absorption_length',1e6)
+LAr.set('scattering_length',1e6)
 
 # surfaces
 black_surface = Surface('black_surface')
