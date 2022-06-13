@@ -1,6 +1,6 @@
 from http.client import REQUESTED_RANGE_NOT_SATISFIABLE
 from linecache import clearcache
-from chroma import Geometry,Solid,Mesh,Material,Surface
+from chroma.geometry import Geometry,Solid,Mesh,Material,Surface
 import chroma.stl as stl
 import chroma.loader as loader
 import chroma.make as make
@@ -59,11 +59,11 @@ CF4 = Material('CF4')
 CF4.set('refractive_index', 1.0004823)
 
 SSteel = Material('SSteel')
-SSteel.set('absorption_length',np.array([(850, 1e-6)]))
+#SSteel.set('absorption_length',np.array([(850, 1e-6)]))
 
 # these 2 are not actually used
 PTFE = Material('PTFE')
-sappire = Material('sappire')
+sapphire = Material('sapphire')
 
 quartz = Material('quartz')
 quartz.set('refractive_index', 1.49)
@@ -111,19 +111,19 @@ def detector_construction():
     g.add_solid(World_solid)
     # treat the PV as the world, a 2*2*2 cube centered at (0,0,0)
 
-    # sappire viewpoint
+    # sapphire viewpoint
     """ currently only 1 viewpoint is set, needs improvement
     """
-    Sappire_mesh = stl.mesh_from_stl('sappire.stl')
-    Sappire_solid = Solid(Sappire_mesh, sappire, CF4, detector_surface)
-    rot_sappire = rotation_matrix(-22.5*np.pi/180, 0, 0)
+    Sapphire_mesh = stl.mesh_from_stl('sapphire.stl')
+    Sapphire_solid = Solid(Sapphire_mesh, sapphire, CF4, detector_surface)
+    rot_sapphire = rotation_matrix(-22.5*np.pi/180, 0, 0)
     h_cone = 0.060325
     pos_measure = np.array([(0.03750+0.02913+0.04603)/2+0.060325, 0, (0.34097+0.38421)/2])
     # The measured position of head cone center(bottom), to zero point
     # ==========================================check!=================================================================
 
-    pos_sappire = pos0 + pos_measure + np.array([h_cone*np.sin(22.5*np.pi/180),0,h_cone*np.cos(22.5*np.pi/180)])
-    g.add_solid(Sappire_solid, rot_sappire, pos_sappire)
+    pos_sapphire = pos0 + pos_measure + np.array([h_cone*np.sin(22.5*np.pi/180),0,h_cone*np.cos(22.5*np.pi/180)])
+    g.add_solid(Sapphire_solid, rot_sapphire, pos_sapphire)
 
     # head cones
     Head_mesh = stl.mesh_from_stl('head_cone.stl')
@@ -156,7 +156,7 @@ def detector_construction():
     # 8 pieces, thus treated in a for loop
     Dref_mesh = stl.mesh_from_stl('dome_ref.stl')
     Dref_solid = Solid(Dref_mesh, PTFE, CF4, shiny_surface)
-    dr_dref = np.sqrt(0.01776^2+(0.07264+0.060325)^2) # difference in x-y plane
+    dr_dref = np.sqrt(0.01776 ** 2 + (0.07264+0.060325) ** 2) # difference in x-y plane
     dz_dref = 0.28018 # measured position in z
     t_plate = 90 - 14.82 # slope of plate, 14.82 degree
     for i in range(8):
