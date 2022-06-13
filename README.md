@@ -2,7 +2,7 @@
 
 ## Explanation
 To run the simualtion, please first run pymesh.py to build all the meshes used. They are stored in .stl format. 
-p 
+The simulation script is written in simulation.py, the data are stored in .csv files. Run data_process as last step. 
 ## Chroma geometry scheme
 Here is a brief scheme when I wrote the chroma geometry. The chroma geomtry are written in class Solid. 
 They should be given a mesh, an inner material, and an outer material. In addition, surface material can be defined for absorption/reflection. 
@@ -25,3 +25,5 @@ They should be given a mesh, an inner material, and an outer material. In additi
     * Inner jar (JAR_SHAPE, quartz)
     * Inner jar reflector (circle plate + cone, PTFE)
     * Inner tower wiper (PE high density)
+
+## To be continued...

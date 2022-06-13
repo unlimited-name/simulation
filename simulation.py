@@ -5,9 +5,12 @@ if __name__ == '__main__':
     from chroma.event import Photons
     from chroma.loader import load_bvh
     from chroma.generator import vertex
+    from . import detector_construction
     import csv
+    import datetime
 
-    g = build_detector()
+    ti = datetime.datetime.now()
+    g = detector_construction.detector_construction()
     g.flatten()
     g.bvh = load_bvh(g)
 
@@ -26,16 +29,25 @@ if __name__ == '__main__':
     pos_detected = []
     dir_detected = []
 
-    csvwriter = csv.writer(csvfile) 
+    file = open('data.csv','w',newline='')
+    csvwriter = csv.writer(file)
+    
+    for i in range(10):
+        for j in range(1000):
     #csvwriter.writerow(['box_inside_l (mm)', 'pd_detect_l (mm)', 'detected counts'])
-    for ev in sim.simulate([photon_bomb(1000,850,(0,0,0.1))],
+            for ev in sim.simulate([photon_bomb(1000,850,(0,0,0.1))],
                            keep_photons_beg=True,keep_photons_end=True,
                            run_daq=False,max_steps=100):
-        f.write_event(ev)
-        detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
-        #pos_detected.append(ev.photons_end.pos[detected])
-        csvwriter.writerow(ev.photons_end.pos[detected])
-        #dir_detected.append(ev.photons_end.dir[detected])
-        csvwriter.writerow(ev.photons_end.dir[detected])
 
-    f.close()
+                detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
+        #pos_detected.append(ev.photons_end.pos[detected])
+                csvwriter.writerow(ev.photons_end.pos[detected])
+        #dir_detected.append(ev.photons_end.dir[detected])
+                csvwriter.writerow(ev.photons_end.dir[detected])
+        # one line of position, along with on line of diretion
+
+    file.close()
+    tf = datetime.datetime.now()
+    dt = tf - ti
+    print("The total time cost: ")
+    print(dt)
