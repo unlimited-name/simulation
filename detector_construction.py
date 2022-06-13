@@ -1,6 +1,7 @@
 from http.client import REQUESTED_RANGE_NOT_SATISFIABLE
 from linecache import clearcache
 from chroma.geometry import Geometry,Solid,Mesh,Material,Surface
+from chroma.make import linear_extrude
 import chroma.stl as stl
 import chroma.loader as loader
 import chroma.make as make
@@ -91,9 +92,10 @@ def SiPM():
     # used as black sipm
     a = 0.0141
     a = a/2
-    vertice = np.array([[a,a,0],[-a,a,0],[-a,-a,0],[a,-a,0]])
-    triangle = np.array([[1,2,3],[3,4,1]])
-    mesh = Mesh(vertice, triangle)
+    #vertice = np.array([[a,a,0],[-a,a,0],[-a,-a,0],[a,-a,0]])
+    #triangle = np.array([[1,2,3],[3,4,1]])
+    #mesh = Mesh(vertice, triangle)
+    mesh = linear_extrude([-a,a,a,-a],[-a,-a,a,a], height=0.0001, center=(0,0,0))
     solid = Solid(mesh, CF4,CF4, black_surface)
     return solid
 

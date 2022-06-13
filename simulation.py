@@ -5,7 +5,7 @@ if __name__ == '__main__':
     from chroma.event import Photons
     from chroma.loader import load_bvh
     from chroma.generator import vertex
-    from . import detector_construction
+    import detector_construction
     import csv
     import datetime
 
