@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import datetime
 
 def rotation_matrix(thetax,thetay,thetaz):
     #the 3d rotation matrix in spherical coord., for simplicity in adding solids
@@ -20,9 +21,16 @@ def recoordinate(Row):
     origin = np.array([0.11545,0,0.21560]) + np.array([0,0,0.22225]) # the center of lens
     focal = np.array([0,0,z0])
     pos_rel = pos - origin #relative position
+    iris = 0.00165 / 2.8 /2
+    index_delete = []
+    for i in range(len(pos_rel)):
+        if np.dot(pos_rel,pos_rel) > (iris*iris):
+            index_delete.append(i)
     rotation = rotation_matrix(22.5/180*np.pi,0,0) # rotate along x axis so the optical axis is z
     pos_rel = np.dot(pos_rel,rotation) - focal #relative to focal point
     dir_rel = np.dot(dir,rotation)
+    pos_rel = np.delete(pos_rel, index_delete, 0) # filter out by the iris
+    dir_rel = np.delete(dir_rel, index_delete, 0)
     return [pos_rel, dir_rel]
 
 def repropagate_plane(Row):
@@ -67,8 +75,10 @@ def equidistant_projection(theta, phi):
     return np.array([i,j])
 
 if __name__ == '__main__':
-# load data from pos.csv and dir. csv
-    buffer = np.array([])
+    # name dependent on the time of running
+    namestr = str(datetime.datetime.now())
+    # load data from pos.csv and dir. csv
+    buffer = []
     with open('data.csv', newline='') as f:
         reader = csv.reader(f)
         for row in reader:
@@ -76,5 +86,11 @@ if __name__ == '__main__':
             point = equidistant_projection(repropagate_plane(recoordinate(row)))
             buffer.append(point)
     
-    plt.scatter(buffer)
-    #try histogram
+    buffer = np.transpose(np.array(buffer))
+    x = buffer[0]
+    y = buffer[1]
+    plt.scatter(x,y, alpha=0.1)
+    plt.savefig(namestr + '_scatter.png')
+
+    plt.hist2d(x,y)
+    plt.savefig(namestr + '_hist.png')
