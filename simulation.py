@@ -146,8 +146,11 @@ if __name__ == '__main__':
     else:
         print('Please enter a mode: led1 or led3')
     
-    file.close()
     tf = datetime.datetime.now()
     dt = tf - ti
+    csvwriter.writerow('The total time cost: ')
+    csvwriter.writerow(dt)
+    file.close()
+
     print("The total time cost: ")
     print(dt)
