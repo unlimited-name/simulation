@@ -29,15 +29,18 @@ def rotation_matrix(thetax,thetay,thetaz):
 def point_source(wavelength, n, pos, dir):
     # n photons in total emitting from points (pos), with angles restricted
     # accepts multiple points input, they will be evenly rotated
+    # dir is the direction of source - the direction of Z axis here
 
     n = int(n)
+    pos = np.array(pos)
+    dir = np.array(dir)
     # restrict angles
     phi_restrict = 2*np.pi
     theta_restrict = 60/180*np.pi
 
-    pos_photon = []
-    dir_photon = []
-    pol_photon = []
+    pos_photon = pos[0]
+    dir_photon = dir[0]
+    pol_photon = np.cross(dir_photon,random_vector())
 
     while len(dir_photon)<n:
 
@@ -45,14 +48,15 @@ def point_source(wavelength, n, pos, dir):
             pos_photon.append(pos[i])
             phi = phi_restrict * random.random()
             theta = theta_restrict * random.random()
-            dirvec = np.array((np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta)))
-            dir_photon.append(dirvec + dir)
-            pol_photon.append(np.cross(dir_photon,random_vector()))
+            dirvec = np.array((np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta), np.cos(theta)))
 
-    pos_photon = np.array(pos_photon)
-    dir_photon = np.array(dir_photon)
-    pol_photon = np.array(pol_photon)
+            np.concatenate((dir_photon, dirvec+dir), axis=0)
+            np.concatenate((pol_photon, np.cross(dir_photon,random_vector())), axis=0)
+
     wavelengths = np.repeat(wavelength,n)
+    # check the dimensions of input
+    if (len(pos_photon)!=len(pol_photon) | len(pos_photon)!=len(wavelengths) ):
+        print('false!')
     return Photons(pos_photon, dir_photon, pol_photon, wavelengths)
 
 def LED_ring(wavelength, n, pos, dir):
@@ -61,7 +65,10 @@ def LED_ring(wavelength, n, pos, dir):
     n = n//24
     ring = 0.24
     # obtain the angles of normal vector
-    phi = np.arctan(dir[1]/dir[0])
+    if dir[0]==0:
+        phi = np.pi /2
+    else: 
+        phi = np.arctan(dir[1]/dir[0])
     theta = np.arctan(np.sqrt(dir[0]*dir[0]+dir[1]*dir[1])/dir[2])
 
     # position matrices for 24 LEDs
