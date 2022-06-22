@@ -17,6 +17,13 @@ def random_vector():
     vec = np.array((np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta), np.cos(phi)))
     return vec
 
+def random_vector_restricted(theta_restrict, phi_restrict):
+    phi = phi_restrict * random.random()
+    theta = theta_restrict * random.random()
+    vec = np.array((np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta), np.cos(phi)))
+    return vec
+
+
 def rotation_matrix(thetax,thetay,thetaz):
     #the 3d rotation matrix in spherical coord., for simplicity in adding solids
     #the algorithm chroma uses: inner product(vertice, rot) + pos
@@ -40,24 +47,18 @@ def point_source(wavelength, n, pos, dir):
 
     pos_photon = np.array([pos[-2],pos[-1]])
     dir_photon = np.array([dir[-2],dir[-1]])
-    pol_photon = np.array([np.cross(dir_photon[-2],random_vector()),np.cross(dir_photon[-1],random_vector())])
+    pol_photon = np.array([random_vector(),np.cross(dir_photon[-1],random_vector())])
 
     while len(pos_photon)<n:
-
         for i in range(len(pos)):
-            np.concatenate((pos_photon, pos[i]), axis=0)
-            phi = phi_restrict * random.random()
-            theta = theta_restrict * random.random()
-            dirvec = np.array((np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta), np.cos(theta)))
-            np.concatenate((dir_photon, dirvec+dir), axis=0)
-            np.concatenate((pol_photon, np.cross(dir_photon[-1],random_vector())), axis=0)
+            pos_photon = np.append(pos_photon, [pos[i]], axis=0)
+            dirvec = random_vector_restricted(theta_restrict, phi_restrict)
+            dir_photon = np.append(dir_photon, [dirvec+dir], axis=0)
+            pol_photon = np.append(pol_photon, [np.cross(dir_photon[-1],random_vector())], axis=0)
             if (len(pos_photon)==n): 
                 break
 
     wavelengths = np.repeat(wavelength,n)
-    # check the dimensions of input
-    if (len(pos_photon)!=len(pol_photon) | len(pos_photon)!=len(wavelengths) ):
-        print('false!')
     return Photons(pos_photon, dir_photon, pol_photon, wavelengths)
 
 def LED_ring(wavelength, n, pos, dir):
