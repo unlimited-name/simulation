@@ -38,20 +38,21 @@ def point_source(wavelength, n, pos, dir):
     phi_restrict = 2*np.pi
     theta_restrict = 60/180*np.pi
 
-    pos_photon = pos[0]
-    dir_photon = dir[0]
-    pol_photon = np.cross(dir_photon,random_vector())
+    pos_photon = np.array([pos[-2],pos[-1]])
+    dir_photon = np.array([dir[-2],dir[-1]])
+    pol_photon = np.array([np.cross(dir_photon[-2],random_vector()),np.cross(dir_photon[-1],random_vector())])
 
-    while len(dir_photon)<n:
+    while len(pos_photon)<n:
 
         for i in range(len(pos)):
-            pos_photon.append(pos[i])
+            np.concatenate((pos_photon, pos[i]), axis=0)
             phi = phi_restrict * random.random()
             theta = theta_restrict * random.random()
             dirvec = np.array((np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta), np.cos(theta)))
-
             np.concatenate((dir_photon, dirvec+dir), axis=0)
-            np.concatenate((pol_photon, np.cross(dir_photon,random_vector())), axis=0)
+            np.concatenate((pol_photon, np.cross(dir_photon[-1],random_vector())), axis=0)
+            if (len(pos_photon)==n): 
+                break
 
     wavelengths = np.repeat(wavelength,n)
     # check the dimensions of input
@@ -63,14 +64,18 @@ def LED_ring(wavelength, n, pos, dir):
     # n photons emitting photons evenly from 24 LEDs arranged in a ring
     # use pos,dir as the position and normal vector of the ring.
     n = n//24
-    ring = 0.24
+    ring = 0.024
     # obtain the angles of normal vector
+    if (dir[2])==0:
+        theta = np.pi /2
+    else:
+        theta = np.arctan(np.sqrt(dir[0]*dir[0]+dir[1]*dir[1])/dir[2])
+
     if dir[0]==0:
         phi = np.pi /2
     else: 
         phi = np.arctan(dir[1]/dir[0])
-    theta = np.arctan(np.sqrt(dir[0]*dir[0]+dir[1]*dir[1])/dir[2])
-
+    
     # position matrices for 24 LEDs
     pos_led = []
     delta = np.pi/12
