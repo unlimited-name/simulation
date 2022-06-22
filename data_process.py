@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import sys
 import datetime
 
 def rotation_matrix(thetax,thetay,thetaz):
@@ -77,9 +78,10 @@ def equidistant_projection(theta, phi):
 if __name__ == '__main__':
     # name dependent on the time of running
     namestr = str(datetime.datetime.now())
+    filename = sys.argv[1]
     # load data from pos.csv and dir. csv
     buffer = []
-    with open('data.csv', newline='') as f:
+    with open(filename, newline='') as f:
         reader = csv.reader(f)
         for row in reader:
             #print(row)
