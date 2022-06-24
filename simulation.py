@@ -7,7 +7,7 @@ from chroma.loader import load_bvh
 from chroma.generator import vertex
 import detector_construction
 import sys
-import csv
+import pandas as pd
 import datetime
 
 def random_vector():
@@ -43,7 +43,7 @@ def point_source(wavelength, n, pos, dir):
     dir = np.array(dir)
     # restrict angles
     phi_restrict = 2*np.pi
-    theta_restrict = 60/180*np.pi
+    theta_restrict = 90 /180*np.pi
 
     pos_photon = np.array([pos[-2],pos[-1]])
     dir_photon = np.array([random_vector_restricted(theta_restrict, phi_restrict),random_vector_restricted(theta_restrict, phi_restrict)])
@@ -67,7 +67,7 @@ def LED_ring(wavelength, n, pos, dir):
     n = int(n)
     pos = np.array(pos)
     dir = np.array(dir)
-    ring = 0.024
+    ring = (0.06985+0.12065/2)/2
     # obtain the angles of normal vector
     if (dir[2])==0:
         theta = np.pi /2
@@ -95,7 +95,7 @@ def triple_LED_ring(wavelength, n, pos, dir):
     # the function used for 3 LEDs, the input parameters are the same with LED1
     # but with LED1 rotated 3/pi each time
     n = int(n/24/3)
-    ring = 0.24
+    ring = (0.06985+0.12065/2)/2
     # obtain the angles of normal vector
     phi = np.arctan(dir[1]/dir[0])
     theta = np.arctan(np.sqrt(dir[0]*dir[0]+dir[1]*dir[1])/dir[2])
@@ -115,7 +115,7 @@ def triple_LED_ring(wavelength, n, pos, dir):
 
 if __name__ == '__main__':
     mode = sys.argv[1]
-    ti = datetime.datetime.now()
+    ti = pd.to_datetime(datetime.datetime.now())
     g = detector_construction.detector_construction()
     g.flatten()
     g.bvh = load_bvh(g)
@@ -123,14 +123,15 @@ if __name__ == '__main__':
     sim = Simulation(g)
 
     # sim.simulate() always returns an iterator even if we just pass
-    pos_detected = []
-    dir_detected = []
     namestr = str(datetime.date.today())
-    file = open(namestr + '_data.csv','w',newline='')
-    csvwriter = csv.writer(file)
+    #file = open(namestr + '_data.csv','w',newline='')
+    #csvwriter = csv.writer(file)
     
+
+    position_list = []
+    direction_list = []
     if mode=='led1':
-        for i in range(1):
+        for i in range(10):
             for j in range(1000):
     #csvwriter.writerow(['box_inside_l (mm)', 'pd_detect_l (mm)', 'detected counts'])
                 for ev in sim.simulate([LED_ring(850, 1000, (0,0,0.1), (0,0,1))],
@@ -138,34 +139,42 @@ if __name__ == '__main__':
                            run_daq=False,max_steps=100):
 
                     detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
-                    pos = ev.photons_end.pos[detected]
-                    dir = ev.photons_end.dir[detected]
-                    buffer = np.transpose(np.array([pos,dir]))
-                    for item in buffer:
-                        csvwriter.writerow(item[0])
-                        csvwriter.writerow(item[1])
+                    detected_index = np.arange(1000)[detected]
+                    position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
+                    position_list.append(pd.DataFrame(ev.photons_end.dir[detected], index = detected_index))
 
-        # one line of position, along with on line of diretion
     elif mode=='led3':
         for i in range(10):
             for j in range(1000):
                 for ev in sim.simulate([LED_ring(850, 1000, (0,0,0.1), (0,0,1))],
-                           keep_photons_beg=True,keep_photons_end=True,
+                           keep_photons_beg=False,keep_photons_end=True,
                            run_daq=False,max_steps=100):
 
                     detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
-                    csvwriter.writerow('')
-                    csvwriter.writerow(ev.photons_end.pos[detected])
-                    csvwriter.writerow('')
-                    csvwriter.writerow(ev.photons_end.dir[detected])
-    else:
-        print('Please enter a mode: led1 or led3')
+                    detected_index = np.arange(1000)[detected]
+                    position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
+                    position_list.append(pd.DataFrame(ev.photons_end.dir[detected], index = detected_index))
     
+    elif mode=='point':
+        for i in range(10):
+            for j in range(1000):
+                for ev in sim.simulate([point_source(850, 1000, (0,0,0.1), (0,0,1))],
+                           keep_photons_beg=False,keep_photons_end=True,
+                           run_daq=False,max_steps=100):
+
+                    detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
+                    detected_index = np.arange(1000)[detected]
+                    position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
+                    position_list.append(pd.DataFrame(ev.photons_end.dir[detected], index = detected_index))
+    else:
+        print('Please enter a mode: point, led1 or led3')
+    
+    position_full = pd.concat(position_list)
+    position_full.to_csv(namestr + '_position.csv')
+    direction_full = pd.concat(direction_list)
+    direction_full.to_csv(namestr + '_direction.csv')
     tf = datetime.datetime.now()
     dt = tf - ti
-    csvwriter.writerow('The total time cost: ')
-    csvwriter.writerow(dt)
-    file.close()
 
     print("The total time cost: ")
     print(dt)

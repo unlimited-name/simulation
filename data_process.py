@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import csv
+import pandas as pd
 import sys
 import datetime
 
@@ -79,15 +79,22 @@ if __name__ == '__main__':
     # name dependent on the time of running
     namestr = str(datetime.datetime.now())
     filename = sys.argv[1]
-    # load data from pos.csv and dir. csv
+    # load data from input filename
     buffer = []
+    """
     with open(filename, newline='') as f:
         reader = csv.reader(f)
         for row in reader:
             #print(row)
             point = equidistant_projection(repropagate_plane(recoordinate(row)))
             buffer.append(point)
-    
+    """
+    df = pd.read_csv(filename, usecols=[1,2,3], dtype=float)
+
+    for i in len(df):
+        point = equidistant_projection(repropagate_plane(recoordinate(np.array(df.loc[i]))))
+        buffer.append(point)
+        
     buffer = np.transpose(np.array(buffer))
     x = buffer[0]
     y = buffer[1]
