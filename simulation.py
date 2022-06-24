@@ -5,6 +5,7 @@ from chroma.sim import Simulation
 from chroma.event import Photons
 from chroma.loader import load_bvh
 from chroma.generator import vertex
+from chroma.sample import uniform_sphere
 import detector_construction
 import sys
 import pandas as pd
@@ -113,8 +114,18 @@ def triple_LED_ring(wavelength, n, pos, dir):
 
     return point_source(wavelength, n, pos_led, dir)
 
+def photon_bomb(n,wavelength,pos):
+    pos = np.tile(pos,(n,1))
+    dir = uniform_sphere(n)
+    pol = np.cross(dir,uniform_sphere(n))
+    wavelengths = np.repeat(wavelength,n)
+    return Photons(pos,dir,pol,wavelengths)
+
 if __name__ == '__main__':
-    mode = sys.argv[1]
+    if sys.argv[1]==0:
+        mode = 'point'
+    else:
+        mode = sys.argv[1]
     ti = pd.to_datetime(datetime.datetime.now())
     g = detector_construction.detector_construction()
     g.flatten()
@@ -126,7 +137,6 @@ if __name__ == '__main__':
     namestr = str(datetime.date.today())
     #file = open(namestr + '_data.csv','w',newline='')
     #csvwriter = csv.writer(file)
-    
 
     position_list = []
     direction_list = []
@@ -154,11 +164,11 @@ if __name__ == '__main__':
                     detected_index = np.arange(1000)[detected]
                     position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
                     position_list.append(pd.DataFrame(ev.photons_end.dir[detected], index = detected_index))
-    
+
     elif mode=='point':
         for i in range(10):
             for j in range(1000):
-                for ev in sim.simulate([point_source(850, 1000, (0,0,0.1), (0,0,1))],
+                for ev in sim.simulate([photon_bomb(1000, 850, (0,0,0.1), (0,0,1))],
                            keep_photons_beg=False,keep_photons_end=True,
                            run_daq=False,max_steps=100):
 
@@ -175,6 +185,7 @@ if __name__ == '__main__':
     direction_full.to_csv(namestr + '_direction.csv')
     tf = datetime.datetime.now()
     dt = tf - ti
+
 
     print("The total time cost: ")
     print(dt)

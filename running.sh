@@ -1,5 +1,7 @@
 ti=$(date "+%Y%m%d-%H%M%S")
-nohup python simulation.py led1 &
+echo 'initial time:'
+echo '${ti}'
+nohup python -u simulation.py > out.log 2>&1 &
 tf=$(date "+%Y%m%d-%H%M%S")
 echo 'initial time:'
 echo '${ti}'
