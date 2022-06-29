@@ -168,7 +168,7 @@ if __name__ == '__main__':
     elif mode=='point':
         for i in range(10):
             for j in range(1000):
-                for ev in sim.simulate([photon_bomb(1000, 850, (0,0,0.1), (0,0,1))],
+                for ev in sim.simulate([photon_bomb(1000, 850, (0,0,0.1))],
                            keep_photons_beg=False,keep_photons_end=True,
                            run_daq=False,max_steps=100):
 
