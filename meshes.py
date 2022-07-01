@@ -12,8 +12,8 @@ def generate_circular_vertex(theta,r,steps):
 def generate_linear_vertex(start,end,steps):
     # 3d linear space
     x = np.linspace(start[0],end[0],steps)
-    y = np.linspace(start[0],end[0],steps)
-    z = np.linspace(start[0],end[0],steps)
+    y = np.linspace(start[1],end[1],steps)
+    z = np.linspace(start[2],end[2],steps)
     points = np.transpose([x,y,z])
     return points
 
@@ -22,6 +22,13 @@ def displacement(vertices, dx=0, dy=0, dz=0):
     points = vertices
     cache = points[:] + np.array([dx,dy,dz])
     return cache
+
+def distance(vertice, x,y,z):
+    # get the distance (squared) to point x,y,z
+    p = np.array([x,y,z])
+    delta = vertice - p
+    d = np.dot(delta,delta)
+    return d
 
 def sapphire_viewpoint():
     # pick out the sensitive surface
@@ -42,28 +49,35 @@ def head_reflector():
     vertices = np.concatenate((vertices,generate_linear_vertex(endpoint,[0,0,0],100)))
     vertices = np.concatenate((vertices, np.dot(vertices, np.diag([1,-1,1])))) # mirror in x-z plane
     # the bigger sector shape, centered at (0,0,0)
-    i1 = len(vertices)
     hole = displacement(generate_circular_vertex(360,D/2,100), d+D/2, 0, 0)
-    # the smaller circular hole inside, centered at x = ...
+    # the smaller circular hole inside, centered at x = d+D/2
     vertices = np.concatenate((vertices, hole))
-    i2 = len(vertices)
-    hole_index = np.arange(i1,i2,1)
     tri = pymesh.triangle()
+    tri.max_num_steiner_points = 100
     tri.points = vertices
     tri.verbosity = 1
     tri.run()
     mesh = tri.mesh
     # the initial pymesh triangle method. This mesh has failed in creating the hole
-    # vertices, hole; triangles
-    triangle = mesh.get_attribute('faces')
-    index = []
-    for i in range(len(triangle)):
-        if triangle[i] in hole_index:
-            index.append(i)
 
-    triangle_new = np.delete(triangle,index)
-    mesh.faces = triangle_new
-    return mesh
+    vertices = mesh.vertices
+    faces = mesh.faces
+    hole_index = []
+    for i in vertices:
+        hole_index.append(distance(i,d+D/2,0,0) < ((D*D/4)+0.001) )
+    hole_index = np.arange(len(vertices))[np.array(hole_index)]
+    # exclude all the triangles in the hole
+    index = [] # label these triangles
+    for i in faces:
+        a = i[0] in hole_index
+        b = i[1] in hole_index
+        c = i[2] in hole_index
+        index.append(not ((a and b) or (b and c) or (c and a)))
+
+    index_array = np.array(index)
+    faces_new = faces[index_array]
+    mesh_new = pymesh.meshio.form_mesh(vertices, faces_new, voxels=None)
+    return mesh_new
 
 # head_cone.stl
 def head_cone():
