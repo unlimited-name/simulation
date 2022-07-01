@@ -299,14 +299,11 @@ def iter_box(nx,ny,nz,spacing):
             # top
             yield (x,y,dz/2), (0,0,-1)
 
-size = 100
-glass_thickness = 10
-
-nx, ny, nz = 20, 20, 20
-
-spacing = size*2
-
 def test_geometry():
+    size = 100
+    glass_thickness = 10
+    nx, ny, nz = 20, 20, 20
+    spacing = size*2
     """Returns a cubic detector made of cubic photodetectors."""
     g = Geometry(water)
     for pos, dir in iter_box(nx,ny,nz,spacing):
