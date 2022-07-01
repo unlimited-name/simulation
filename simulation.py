@@ -128,11 +128,14 @@ if __name__ == '__main__':
         mode = 'point'
     else:
         mode = sys.argv[1]
+    """
     if mode == 'test':
         g = detector_construction.test_geometry()
     else:
         g = detector_construction.detector_construction()
-    
+    """
+
+    g = detector_construction.test_geometry()
     g.flatten()
     g.bvh = load_bvh(g)
 
