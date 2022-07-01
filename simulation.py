@@ -121,13 +121,18 @@ def photon_bomb(n,wavelength,pos):
     wavelengths = np.repeat(wavelength,n)
     return Photons(pos,dir,pol,wavelengths)
 
+
 if __name__ == '__main__':
-    if sys.argv[1]==0:
+    ti = pd.to_datetime(datetime.datetime.now())
+    if len(sys.argv)==1:
         mode = 'point'
     else:
         mode = sys.argv[1]
-    ti = pd.to_datetime(datetime.datetime.now())
-    g = detector_construction.detector_construction()
+    if mode == 'test':
+        g = detector_construction.test_geometry()
+    else:
+        g = detector_construction.detector_construction()
+    
     g.flatten()
     g.bvh = load_bvh(g)
 
@@ -165,7 +170,7 @@ if __name__ == '__main__':
                     position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
                     position_list.append(pd.DataFrame(ev.photons_end.dir[detected], index = detected_index))
 
-    elif mode=='point':
+    elif (mode=='point' or mode=='test'):
         for i in range(10):
             for j in range(1000):
                 for ev in sim.simulate([photon_bomb(1000, 850, (0,0,0.1))],

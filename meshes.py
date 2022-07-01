@@ -2,6 +2,7 @@ import pymesh
 import numpy as np
 
 def generate_circular_vertex(theta,r,steps):
+    # generate vertices on a circle, centering (0,0,0)
     x = r * np.cos(np.linspace(0,theta/180*np.pi,steps))
     y = r * np.sin(np.linspace(0,theta/180*np.pi,steps))
     z = np.zeros((1,len(x)))[0]
@@ -9,6 +10,7 @@ def generate_circular_vertex(theta,r,steps):
     return points
 
 def generate_linear_vertex(start,end,steps):
+    # 3d linear space
     x = np.linspace(start[0],end[0],steps)
     y = np.linspace(start[0],end[0],steps)
     z = np.linspace(start[0],end[0],steps)
@@ -16,19 +18,22 @@ def generate_linear_vertex(start,end,steps):
     return points
 
 def displacement(vertices, dx=0, dy=0, dz=0):
+    # x-y-z dispacement for a numpy array
     points = vertices
     cache = points[:] + np.array([dx,dy,dz])
     return cache
 
 def sapphire_viewpoint():
     # pick out the sensitive surface
+    # mesh object: the center (0,0,0) being the lower surfece of the column
     d = 0.03647
     h = 0.001
-    mesh = pymesh.generate_cylinder([0,0,0], [0,0,h], d/2, d/2, num_segments=16)
+    mesh = pymesh.generate_cylinder([0,0,0], [0,0,h], d/2, d/2, num_segments=64)
     return mesh
 
 #head_ref.stl
 def head_reflector():
+    
     L = 0.15239
     D = 0.12065
     d = 0.02476
@@ -36,8 +41,10 @@ def head_reflector():
     endpoint = vertices[len(vertices)-1]
     vertices = np.concatenate((vertices,generate_linear_vertex(endpoint,[0,0,0],100)))
     vertices = np.concatenate((vertices, np.dot(vertices, np.diag([1,-1,1])))) # mirror in x-z plane
+    # the bigger sector shape, centered at (0,0,0)
     i1 = len(vertices)
     hole = displacement(generate_circular_vertex(360,D/2,100), d+D/2, 0, 0)
+    # the smaller circular hole inside, centered at x = ...
     vertices = np.concatenate((vertices, hole))
     i2 = len(vertices)
     hole_index = np.arange(i1,i2,1)
@@ -46,6 +53,7 @@ def head_reflector():
     tri.verbosity = 1
     tri.run()
     mesh = tri.mesh
+    # the initial pymesh triangle method. This mesh has failed in creating the hole
     # vertices, hole; triangles
     triangle = mesh.get_attribute('faces')
     index = []
@@ -59,14 +67,16 @@ def head_reflector():
 
 # head_cone.stl
 def head_cone():
+    # mesh object: the center (0,0,0) being the lower plane of the tube
     D = 0.12065
     d = 0.0508
     h = 0.060325
-    mesh = pymesh.generate_tube([0,0,0], [0,0,h], D/2, d/2, D/2, d/2, num_segments=16, with_quad=False)
+    mesh = pymesh.generate_tube([0,0,0], [0,0,h], D/2, d/2, D/2, d/2, num_segments=64, with_quad=False)
     return mesh
 
 # dome_ref.stl
 def dome_reflector():
+    # mesh object: the center (0,0,0) being the center of the object, lies in x-y plane 
     d = 0.09805/2
     D = 0.11294/2
     L = 0.09119
@@ -77,27 +87,28 @@ def dome_reflector():
     tri.verbosity = 1
     tri.run()
     mesh = tri.mesh
-
     return mesh
 
 # oj_ref.stl
 def oj_ref():
+    # mesh object: center (0,0,0) being the bottom
     r = 0.12235
     h = 0.22225
-    mesh = pymesh.generate_tube([0,0,0], [0,0,h], r, r, r, r, num_segments=16, with_quad=False)
+    mesh = pymesh.generate_tube([0,0,0], [0,0,h], r, r, r, r, num_segments=64, with_quad=False)
     return mesh
 
 # ij_ref.stl
 def ij_ref():
+    # mesh object: center (0,0,0) being the bottom 
     R = 0.092075
     d = 0.0762
     L = 0.05771
     h = np.sqrt(L*L - (R-d/2)*(R-d/2))
-    mesh = pymesh.generate_cylinder([0,0,0], [0,0,h], R, d/2, num_segments=16)
+    mesh = pymesh.generate_cylinder([0,0,0], [0,0,h], R, d/2, num_segments=64)
     return mesh
 
 def sipm():
-    # no longer used. replaced by simply 2 triangles
+    # no longer used. replaced by newly written function in detector construction
     a = 0.0141
     mesh = pymesh.generate_box_mesh([0, 0], [a, a], num_samples=1, keep_symmetry=False, subdiv_order=0, using_simplex=True)
     return mesh
@@ -115,7 +126,6 @@ def mesh_grid(grid):
     mesh[len(begin):,0] = begin
     mesh[len(begin):,1] = end_roll
     mesh[len(begin):,2] = begin_roll
-
     return mesh
 
 def norm(x):
@@ -164,12 +174,13 @@ def rotate_extrude(x, y, nsteps=64):
     return mesh
 
 def draw_a_circle(center,angle,r,theta):
-    steps = 50
+    steps = 64
     x = r * np.cos(np.linspace(angle, angle+theta, steps)) + center[0]
     y = r * np.sin(np.linspace(angle, angle+theta, steps)) + center[1]
     return [x,y]
 
 def oj_out():
+    # mesh object: center (0,0,0) being the bottom
     h = 0.22225
     r = 0.12
     r1 = 0.04
@@ -191,6 +202,7 @@ def oj_out():
     return rotate_extrude(X, Y, nsteps=64)
 
 def oj_in():
+    # mesh object: center (0,0,0) being the bottom
     h = 0.22225
     r = 0.115
     r1 = 0.035
@@ -212,6 +224,7 @@ def oj_in():
     return rotate_extrude(X, Y, nsteps=64)
 
 def ij_out():
+    # mesh object: center (0,0,0) being the bottom
     h = 0
     r = 0.105
     r1 = 0.03
@@ -233,6 +246,7 @@ def ij_out():
     return rotate_extrude(X, Y, nsteps=64)
 
 def ij_in():
+    # mesh object: center (0,0,0) being the bottom
     h = 0
     r = 0.1
     r1 = 0.025
@@ -256,7 +270,7 @@ def ij_in():
 if __name__ == '__main__':
     pymesh.meshio.save_mesh('sapphire.stl', sapphire_viewpoint())
     pymesh.meshio.save_mesh('head_cone.stl',head_cone())
-    #pymesh.meshio.save_mesh('head_ref.stl',head_reflector())
+    pymesh.meshio.save_mesh('head_ref.stl',head_reflector())
     pymesh.meshio.save_mesh('dome_ref.stl',dome_reflector())
     pymesh.meshio.save_mesh('oj_ref.stl',oj_ref())
     pymesh.meshio.save_mesh('ij_ref.stl',ij_ref())
