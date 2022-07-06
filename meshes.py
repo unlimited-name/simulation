@@ -1,6 +1,12 @@
 import pymesh
 import numpy as np
 
+def invert_mesh(mesh):
+    # from the imported mesh, generate a inverted one: 
+    # Triangles reverted
+    mesh_new = mesh
+    return mesh_new
+
 def generate_circular_vertex(theta,r,steps):
     # generate vertices on a circle, centering (0,0,0)
     x = r * np.cos(np.linspace(0,theta/180*np.pi,steps))

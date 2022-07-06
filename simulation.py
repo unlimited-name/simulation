@@ -178,7 +178,7 @@ if __name__ == '__main__':
             for j in range(1000):
                 for ev in sim.simulate([photon_bomb(1000, 850, (0,0,0.1))],
                            keep_photons_beg=False,keep_photons_end=True,
-                           run_daq=False,max_steps=100):
+                           run_daq=False,max_steps=20):
 
                     detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
                     detected_index = np.arange(1000)[detected]
