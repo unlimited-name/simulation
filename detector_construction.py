@@ -28,8 +28,9 @@ but they can simply be ignored.
 """
 
 def rotation_matrix(thetax,thetay,thetaz):
-    #the 3d rotation matrix in spherical coord., for simplicity in adding solids
-    #the algorithm chroma uses: inner product(vertice, rot) + pos
+    # the 3d rotation matrix in spherical coord., for simplicity in adding solids
+    # the algorithm chroma uses: inner product(vertice, rot) + pos
+    # this rotation matrix is designed for x-y-z axis order's rotation
     rx = np.array([[1,0,0], [0,np.cos(thetax),-1*np.sin(thetax)], [0,np.sin(thetax),np.cos(thetax)]])
     ry = np.array([[np.cos(thetay),0,np.sin(thetay)], [0,1,0], [-1*np.sin(thetay),0,np.cos(thetay)]])
     rz = np.array([[np.cos(thetaz),-1*np.sin(thetaz),0], [np.sin(thetaz),np.cos(thetaz),0], [0,0,1]])
@@ -118,7 +119,7 @@ def SiPM():
 
 def detector_construction():
     g = Geometry(vacuum)
-    pos0 = np.array([0,0,-1])
+    pos0 = np.array([0,0,0])
     # this is the position of inner jar center relative to [0,0,0]
     # in my construction, I actually considered all the position relative to inner jar center
     pos1 = np.array([0,0,0.2225])
@@ -180,15 +181,19 @@ def detector_construction():
     t_plate = 90 - 14.82 # slope of plate, 14.82 degree
     for i in range(8):
         pos_dref = np.array([dr_dref*np.cos(i*np.pi/4), dr_dref*np.sin(i*np.pi/4), dz_dref]) + pos0
-        rot_dref = rotation_matrix(t_plate*np.pi/180, 0, i*np.pi/4)
+        rot_dref = rotation_matrix(t_plate*np.pi/180, 0, i*np.pi/4) 
+        # every plate is originally in x-y plane, then rotated along 
         g.add_solid(Dref_solid, rot_dref, pos_dref)
         g.add_solid(SiPM(), rot_dref, pos_dref)
+        # adding a sipm at each plate's center
 
     # Outer Jar
+    # includes 2 layers: inside and outside.
     Ojout_mesh = stl.mesh_from_stl('oj_out.stl')
     Ojin_mesh = stl.mesh_from_stl('oj_in.stl')
     Ojout_solid = Solid(Ojout_mesh, quartz, CF4)
     pos_ojout = pos0 - np.array([0,0,0.0001])
+    # make a bit room for distinction. moved outer part a bit lower
     rot_oj = rotation_matrix(0,0,0)
     g.add_solid(Ojout_solid, rot_oj, pos_ojout)
     Ojin_solid = Solid(Ojin_mesh, LAr, quartz)

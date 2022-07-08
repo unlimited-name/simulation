@@ -4,7 +4,11 @@ import numpy as np
 def invert_mesh(mesh):
     # from the imported mesh, generate a inverted one: 
     # Triangles reverted
-    mesh_new = mesh
+    # the input ought to be a mesh object
+    vertices = mesh.vertices
+    triangles = mesh.faces
+    triangles_new = np.flipud(triangles)
+    mesh_new = pymesh.meshio.form_mesh(vertices, triangles_new, voxels=None)
     return mesh_new
 
 def generate_circular_vertex(theta,r,steps):
@@ -65,9 +69,11 @@ def head_reflector():
     tri.run()
     mesh = tri.mesh
     # the initial pymesh triangle method. This mesh has failed in creating the hole
-
+    # try mesh subtraction (boolean) for cutting a hole
+    """
     vertices = mesh.vertices
     faces = mesh.faces
+    # step 1: 
     hole_index = []
     for i in vertices:
         hole_index.append(distance(i,d+D/2,0,0) < ((D*D/4)+0.001) )
@@ -84,6 +90,15 @@ def head_reflector():
     faces_new = faces[index_array]
     mesh_new = pymesh.meshio.form_mesh(vertices, faces_new, voxels=None)
     return mesh_new
+    """
+    tri_hole = pymesh.triangle()
+    tri_hole.max_num_steiner_points = 50
+    tri_hole.points = hole
+    tri_hole.verbosity = 1
+    tri_hole.run()
+    mesh_hole = tri_hole.mesh
+    mesh_final = pymesh.boolean(mesh, mesh_hole, operation = 'difference', engine = 'igl')
+    return mesh_final
 
 # head_cone.stl
 def head_cone():
@@ -97,6 +112,7 @@ def head_cone():
 # dome_ref.stl
 def dome_reflector():
     # mesh object: the center (0,0,0) being the center of the object, lies in x-y plane 
+    # update: need to aline h in x direction
     d = 0.09805/2
     D = 0.11294/2
     L = 0.09119
