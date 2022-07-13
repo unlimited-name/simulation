@@ -23,7 +23,10 @@ def invert_mesh(mesh):
     vertices = mesh.vertices
     triangles = mesh.faces
     triangles_new = np.flipud(triangles)
-    mesh_new = pymesh.meshio.form_mesh(vertices, triangles_new, voxels=None)
+
+    # for chroma mesh, rotate pi/2 in x axis to turn into z-axis
+    vertices_new = np.dot(vertices,rotation_matrix(np.pi/2,0,0))
+    mesh_new = pymesh.meshio.form_mesh(vertices_new, triangles_new, voxels=None)
     return mesh_new
 
 def generate_circular_vertex(theta,r,steps):
@@ -84,27 +87,30 @@ def head_reflector():
     tri.run()
     mesh = tri.mesh
     # the initial pymesh triangle method. This mesh has failed in creating the hole
-    # try mesh subtraction (boolean) for cutting a hole
-    """
+
     vertices = mesh.vertices
     faces = mesh.faces
-    # step 1: 
+    # step 1: tagging all the vertices inside the hole
     hole_index = []
     for i in vertices:
-        hole_index.append(distance(i,d+D/2,0,0) < ((D*D/4)+0.001) )
+        hole_index.append(distance(i,d+D/2,0,0) < ((D*D/4) - 0.001) )
     hole_index = np.arange(len(vertices))[np.array(hole_index)]
-    # exclude all the triangles in the hole
+    # step 2: exclude all the (vertices and ?) triangles related
     index = [] # label these triangles
     for i in faces:
         a = i[0] in hole_index
         b = i[1] in hole_index
         c = i[2] in hole_index
-        index.append(not ((a and b) or (b and c) or (c and a)))
+        index.append(not (a or b or c)) # any triangle containing vertice in the hole will be "False"
 
     index_array = np.array(index)
     faces_new = faces[index_array]
     mesh_new = pymesh.meshio.form_mesh(vertices, faces_new, voxels=None)
     return mesh_new
+
+    # use pymesh to remove isolated vertice / remesh
+
+    # Tried boolean method, fails (not PWN mesh)
     """
     tri_hole = pymesh.triangle()
     tri_hole.max_num_steiner_points = 50
@@ -113,7 +119,8 @@ def head_reflector():
     tri_hole.run()
     mesh_hole = tri_hole.mesh
     mesh_final = pymesh.boolean(mesh, mesh_hole, operation = 'difference', engine = 'igl')
-    return mesh_final
+    return mesh_final"""
+
 
 # head_cone.stl
 def head_cone():
@@ -250,7 +257,8 @@ def oj_out():
     X = np.concatenate((X,circle[0]))
     Y = np.concatenate((Y,circle[1]))
 
-    return rotate_extrude(X, Y, nsteps=64)
+    mesh = rotate_extrude(X, Y, nsteps=64)
+    return invert_mesh(mesh)
 
 def oj_in():
     # mesh object: center (0,0,0) being the bottom
@@ -272,7 +280,8 @@ def oj_in():
     X = np.concatenate((X,circle[0]))
     Y = np.concatenate((Y,circle[1]))
 
-    return rotate_extrude(X, Y, nsteps=64)
+    mesh = rotate_extrude(X, Y, nsteps=64)
+    return invert_mesh(mesh)
 
 def ij_out():
     # mesh object: center (0,0,0) being the bottom
@@ -294,7 +303,8 @@ def ij_out():
     X = np.concatenate((X,circle[0]))
     Y = np.concatenate((Y,circle[1]))
 
-    return rotate_extrude(X, Y, nsteps=64)
+    mesh = rotate_extrude(X, Y, nsteps=64)
+    return invert_mesh(mesh)
 
 def ij_in():
     # mesh object: center (0,0,0) being the bottom
@@ -316,12 +326,34 @@ def ij_in():
     X = np.concatenate((X,circle[0]))
     Y = np.concatenate((Y,circle[1]))
 
-    return rotate_extrude(X, Y, nsteps=64)
+    mesh = rotate_extrude(X, Y, nsteps=64)
+    return invert_mesh(mesh)
+
+def head_ref_try():
+    L = 0.15239
+    D = 0.12065
+    d = 0.02476
+    vertices = generate_circular_vertex(64,L,50)
+    endpoint = vertices[len(vertices)-1]
+    vertices = np.concatenate((vertices,generate_linear_vertex(endpoint,[0,0,0],100)))
+    vertices = np.concatenate((vertices, np.dot(vertices, np.diag([1,-1,1])))) # mirror in x-z plane
+    # the bigger sector shape, centered at (0,0,0)
+    hole = displacement(generate_circular_vertex(360,D/2,100), d+D/2, 0, 0)
+    # the smaller circular hole inside, centered at x = d+D/2
+    vertices = np.concatenate((vertices, hole))
+    tri = pymesh.triangle()
+    tri.max_num_steiner_points = 100
+    tri.points = vertices
+    tri.verbosity = 1
+    tri.run()
+    mesh = tri.mesh
+    return mesh
 
 if __name__ == '__main__':
     pymesh.meshio.save_mesh('sapphire.stl', sapphire_viewpoint())
     pymesh.meshio.save_mesh('head_cone.stl',head_cone())
     pymesh.meshio.save_mesh('head_ref.stl',head_reflector())
+    pymesh.meshio.save_mesh('head_ref_try.stl',head_ref_try())
     pymesh.meshio.save_mesh('dome_ref.stl',dome_reflector())
     pymesh.meshio.save_mesh('oj_ref.stl',oj_ref())
     pymesh.meshio.save_mesh('ij_ref.stl',ij_ref())
