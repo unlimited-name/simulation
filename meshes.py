@@ -25,7 +25,7 @@ def invert_mesh(mesh):
     triangles_new = np.flipud(triangles)
 
     # for chroma mesh, rotate pi/2 in x axis to turn into z-axis
-    vertices_new = np.dot(vertices,rotation_matrix(np.pi/2,0,0))
+    vertices_new = np.dot(vertices,rotation_matrix(-np.pi/2,0,0))
     mesh_new = pymesh.meshio.form_mesh(vertices_new, triangles_new, voxels=None)
     return mesh_new
 
@@ -105,7 +105,24 @@ def head_reflector():
 
     index_array = np.array(index)
     faces_new = faces[index_array]
+    
+    # step 3: tagging all the vertices at the hole boundary
+    hole_vert_index = []
+    for i in vertices:
+        hole_vert_index.append( (distance(i,d+D/2,0,0) < ((D*D/4) + 0.001)) and (distance(i,d+D/2,0,0) > ((D*D/4) - 0.001)) )
+    hole_vert_index = np.arange(len(vertices))[np.array(hole_index)]
+    # step 4: exclude the triangles with 3 hole_vertices
+    index_vert = [] # label these triangles
+    for i in faces_new:
+        a = i[0] in hole_vert_index
+        b = i[1] in hole_vert_index
+        c = i[2] in hole_vert_index
+        index_vert.append(not (a and b and c))
+    
+    index_vert_array = np.array(index_vert)
+    faces_new = faces_new[index_vert_array]
     mesh_new = pymesh.meshio.form_mesh(vertices, faces_new, voxels=None)
+    
     return mesh_new
 
     # use pymesh to remove isolated vertice / remesh
