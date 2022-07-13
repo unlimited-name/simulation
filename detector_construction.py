@@ -30,7 +30,7 @@ but they can simply be ignored.
 def rotation_matrix(thetax,thetay,thetaz):
     # the 3d rotation matrix in spherical coord., for simplicity in adding solids
     # the algorithm chroma uses: inner product(vertice, rot) + pos
-    # this rotation matrix is designed for x-y-z axis order's rotation
+    # this rotation matrix is designed for x-y-z axis order's rotation, following np.dot(vector, rot) format of use
     rx = np.array([[1,0,0], [0,np.cos(thetax),-1*np.sin(thetax)], [0,np.sin(thetax),np.cos(thetax)]])
     ry = np.array([[np.cos(thetay),0,np.sin(thetay)], [0,1,0], [-1*np.sin(thetay),0,np.cos(thetay)]])
     rz = np.array([[np.cos(thetaz),-1*np.sin(thetaz),0], [np.sin(thetaz),np.cos(thetaz),0], [0,0,1]])
