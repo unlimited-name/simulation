@@ -210,9 +210,9 @@ def simulate(mode = 0):
     g.bvh = load_bvh(g)
     sim = Simulation(g)
 
-    namestr = 'mode: '+str(mode)
+    namestr = 'mode'+str(mode)
     position_list = []
-    for ev in sim.simulate([photon_bomb(50,400,(0,0,0))],
+    for ev in sim.simulate([photon_bomb(1000,400,(0,0,0))],
                            keep_photons_beg=False,keep_photons_end=True,
                            run_daq=False,max_steps=20):
         detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
@@ -220,7 +220,8 @@ def simulate(mode = 0):
         position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
     
     position_full = pd.concat(position_list)
-    position_full.to_csv(namestr + '_position.csv')
+    namestr = namestr + '_position.csv'
+    position_full.to_csv(namestr)
 
 
 if __name__ == '__main__':
