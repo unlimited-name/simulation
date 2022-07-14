@@ -212,11 +212,12 @@ def simulate(mode = 0):
 
     namestr = 'mode'+str(mode)
     position_list = []
-    for ev in sim.simulate([photon_bomb(1000,400,(0,0,0))],
+    length_of_batch = 1000
+    for ev in sim.simulate([photon_bomb(length_of_batch,400,(0,0,0))],
                            keep_photons_beg=False,keep_photons_end=True,
                            run_daq=False,max_steps=20):
         detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
-        detected_index = np.arange(50)[detected]
+        detected_index = np.arange(length_of_batch)[detected]
         position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
     
     position_full = pd.concat(position_list)
