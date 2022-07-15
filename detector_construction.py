@@ -136,7 +136,7 @@ def detector_construction():
     """
     Sapphire_mesh = stl.mesh_from_stl('sapphire.stl')
     Sapphire_solid = Solid(Sapphire_mesh, sapphire, CF4, detector_surface)
-    rot_sapphire = rotation_matrix(-22.5*np.pi/180, 0, 0)
+    rot_sapphire = rotation_matrix(22.5*np.pi/180, 0, 0)
     h_cone = 0.060325
     pos_measure = np.array([(0.03750+0.02913+0.04603)/2+0.060325, 0, (0.34097+0.38421)/2])
     # The measured position of head cone center(bottom), to zero point
@@ -150,13 +150,13 @@ def detector_construction():
     Head_solid = Solid(Head_mesh, CF4, CF4, black_surface) 
     # normal vector / optical axis: 28.16 degree to z axis
     # measured data above. Use 22.5 the design data instead.
-    rot_head1 = rotation_matrix(-22.5*np.pi/180, 0, 0)
+    rot_head1 = rotation_matrix(22.5*np.pi/180, 0, 0)
     pos_head1 = pos_measure + pos0
     g.add_solid(Head_solid, rot_head1, pos_head1)
-    rot_head2 = rotation_matrix(-22.5*np.pi/180, 0, np.pi/3)
+    rot_head2 = rotation_matrix(22.5*np.pi/180, 0, np.pi/3)
     pos_head2 = np.dot(pos_measure, rot_head2) + pos0 
     g.add_solid(Head_solid, rot_head2, pos_head2)
-    rot_head3 = rotation_matrix(-22.5*np.pi/180, 0, 2*np.pi/3)
+    rot_head3 = rotation_matrix(22.5*np.pi/180, 0, 2*np.pi/3)
     pos_head3 = np.dot(pos_measure, rot_head3) + pos0 
     g.add_solid(Head_solid, rot_head3, pos_head3)
 
@@ -178,10 +178,10 @@ def detector_construction():
     Dref_solid = Solid(Dref_mesh, PTFE, CF4, shiny_surface)
     dr_dref = np.sqrt(0.01776 ** 2 + (0.07264+0.060325) ** 2) # difference in x-y plane
     dz_dref = 0.28018 # measured position in z
-    t_plate = 90 - 14.82 # slope of plate, 14.82 degree
+    t_plate = (-90 + 14.82) *np.pi/180 # slope of plate, 14.82 degree
     for i in range(8):
         pos_dref = np.array([dr_dref*np.cos(i*np.pi/4), dr_dref*np.sin(i*np.pi/4), dz_dref]) + pos0
-        rot_dref = rotation_matrix(t_plate*np.pi/180, 0, i*np.pi/4) 
+        rot_dref = rotation_matrix(t_plate, 0, i*np.pi/4) 
         # every plate is originally in x-y plane, then rotated along 
         g.add_solid(Dref_solid, rot_dref, pos_dref)
         g.add_solid(SiPM(), rot_dref, pos_dref)

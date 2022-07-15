@@ -151,7 +151,7 @@ def head_cone():
 # dome_ref.stl
 def dome_reflector():
     # mesh object: the center (0,0,0) being the center of the object, lies in x-y plane 
-    # update: need to aline h in x direction
+
     d = 0.09805/2
     D = 0.11294/2
     L = 0.09119

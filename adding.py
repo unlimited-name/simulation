@@ -12,6 +12,7 @@ import chroma.stl as stl
 import numpy as np
 import pandas as pd
 import datetime
+import sys
 
 def rotation_matrix(thetax,thetay,thetaz):
     # the 3d rotation matrix in spherical coord., for simplicity in adding solids
@@ -99,7 +100,7 @@ def build_detector(mode=0):
     mode = 3: IJ and OJ reflectors
     mode = 4: top reflectors
     mode = 5: cone + detector"""
-    size = 0.1
+    size = 0.2
     glass_thickness = 0.01
     nx, ny, nz = 2, 2, 2
     spacing = size*2
@@ -128,7 +129,7 @@ def build_detector(mode=0):
     # a .4*.4*.4 world with water
     # adding layers with mode number
 
-    pos0 = np.array([0,0,0])
+    pos0 = np.array([0,0,-0.1])
     mode = int(mode)
     if (mode>0):
         Ijout_mesh = stl.mesh_from_stl('ij_out.stl')
@@ -170,7 +171,7 @@ def build_detector(mode=0):
         Dref_solid = Solid(Dref_mesh, water, water, shiny_surface)
         dr_dref = np.sqrt(0.01776 ** 2 + (0.07264+0.060325) ** 2) # difference in x-y plane
         dz_dref = 0.28018 # measured position in z
-        t_plate = 90 - 14.82 # slope of plate, 14.82 degree
+        t_plate = - 90 + 14.82 # slope of plate, 14.82 degree
         for i in range(8):
             pos_dref = np.array([dr_dref*np.cos(i*np.pi/4), dr_dref*np.sin(i*np.pi/4), dz_dref]) + pos0
             rot_dref = rotation_matrix(t_plate*np.pi/180, 0, i*np.pi/4) 
@@ -213,12 +214,14 @@ def simulate(mode = 0):
     namestr = 'mode'+str(mode)
     position_list = []
     length_of_batch = 1000
-    for ev in sim.simulate([photon_bomb(length_of_batch,400,(0,0,0))],
+    for i in range(1):
+        for j in range(1000):
+            for ev in sim.simulate([photon_bomb(length_of_batch,400,(0,0,0))],
                            keep_photons_beg=False,keep_photons_end=True,
                            run_daq=False,max_steps=20):
-        detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
-        detected_index = np.arange(length_of_batch)[detected]
-        position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
+                detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
+                detected_index = np.arange(length_of_batch)[detected]
+                position_list.append(pd.DataFrame(ev.photons_end.pos[detected], index = detected_index))
     
     position_full = pd.concat(position_list)
     namestr = namestr + '_position.csv'
@@ -226,7 +229,19 @@ def simulate(mode = 0):
 
 
 if __name__ == '__main__':
-    # testing: try to add layers of geometry at a time, and run a simulation of 50 photons
+    # testing: try to add layers of geometry at a time, and run a simulation of ~~ photons
     # ti = pd.to_datetime(datetime.datetime.now())
-    for i in range(6):
+    ti = pd.to_datetime(datetime.datetime.now())
+    if len(sys.argv)==1:
+        mode = 6
+    else:
+        mode = sys.argv[1] + 1
+    
+    for i in range(mode):
         simulate(i)
+    
+    tf = datetime.datetime.now()
+    dt = tf - ti
+
+    print("The total time cost: ")
+    print(dt)
