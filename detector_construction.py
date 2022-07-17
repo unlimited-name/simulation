@@ -1,12 +1,12 @@
 from http.client import REQUESTED_RANGE_NOT_SATISFIABLE
 from linecache import clearcache
-from chroma.geometry import Geometry,Solid,Mesh,Material,Surface
+from chroma.geometry import Geometry,Solid
 from chroma.make import linear_extrude
 from chroma.transform import make_rotation_matrix
 from chroma.demo.optics import glass, water, vacuum, r7081hqe_photocathode
-from chroma.demo.optics import black_surface
+
+from optics import teflon_surface, detector_surface, quartz_surface, black_surface
 import chroma.stl as stl
-import chroma.loader as loader
 import chroma.make as make
 import numpy as np
 
@@ -25,6 +25,8 @@ avoid using GDML as a interface between Geant4 and chroma.
 here we import the needed meshes in .stl format, and make fine adjustments to them. 
 for meshes used multiple times and needs adjustion after import, distinct functions are written 
 but they can simply be ignored. 
+
+The properties of Materials and Surfaces are moved to optics.py....
 """
 
 def rotation_matrix(thetax,thetay,thetaz):
