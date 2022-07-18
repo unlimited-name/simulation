@@ -5,7 +5,8 @@ from chroma.make import linear_extrude
 from chroma.transform import make_rotation_matrix
 from chroma.demo.optics import glass, water, vacuum, r7081hqe_photocathode
 
-from optics import teflon_surface, detector_surface, quartz_surface, black_surface
+from optics import teflon_surface, detector_surface, black_surface
+from optics import argon, cf4, quartz, vacuum, sapphire
 import chroma.stl as stl
 import chroma.make as make
 import numpy as np
@@ -39,73 +40,6 @@ def rotation_matrix(thetax,thetay,thetaz):
     m = np.dot(np.dot(rx, ry), rz)
     return m
 
-# Materials
-"""
-    list of optical properties:
-        self.refractive_index = None
-        self.absorption_length = None
-        self.scattering_length = None
-        self.scintillation_spectrum = None
-        self.scintillation_light_yield = None
-        self.scintillation_waveform = None
-        self.scintillation_mod = None
-        self.comp_reemission_prob = []
-        self.comp_reemission_wvl_cdf = []
-        self.comp_reemission_times = []
-        self.comp_reemission_time_cdf = []
-        self.comp_absorption_length = []
-        self.density = 0.0 # g/cm^3
-        self.composition = {} # by mass
-"""
-vacuum = Material('vacuum')
-vacuum.set('refractive_index', 1.0)
-vacuum.set('absorption_length', 1e6)
-vacuum.set('scattering_length', 1e6)
-
-CF4 = Material('CF4')
-CF4.set('refractive_index', 1.0004823)
-CF4.set('absorption_length',1e6)
-CF4.set('scattering_length',1e6)
-
-ssteel = Material('SSteel')
-ssteel.set('refractive_index', 1.0)
-ssteel.set('absorption_length',1e6)
-ssteel.set('scattering_length',1e6)
-
-# these 2 are not actually used
-PTFE = Material('PTFE')
-PTFE.set('refractive_index', 1.0)
-PTFE.set('absorption_length',1e6)
-PTFE.set('scattering_length',1e6)
-sapphire = Material('sapphire')
-sapphire.set('refractive_index', 1.0)
-sapphire.set('absorption_length',1e6)
-sapphire.set('scattering_length',1e6)
-
-quartz = Material('quartz')
-quartz.set('refractive_index', 1.49)
-quartz.set('absorption_length',1e6)
-quartz.set('scattering_length',1e6)
-
-LAr = Material('LAr')
-LAr.set('refractive_index', 2.1)
-LAr.set('absorption_length',1e6)
-LAr.set('scattering_length',1e6)
-
-# surfaces
-black_surface = Surface('black_surface')
-black_surface.set('absorb', 1)
-
-shiny_surface = Surface('shiny_surface')
-shiny_surface.set('reflect_diffuse', 1)
-
-detector_surface = Surface('detector_surface')
-detector_surface.detect = np.array([(850, 1)])
-detector_surface.set('absorb',1)
-
-"""
-for more parameters and details concerning optics, refer to demo/optics
-"""
 
 def SiPM():
     # create a simple square with length a at x-y plane
@@ -116,7 +50,7 @@ def SiPM():
     #triangle = np.array([[1,2,3],[3,4,1]])
     #mesh = Mesh(vertice, triangle)
     mesh = linear_extrude([-a,a,a,-a],[-a,-a,a,a], height=0.0001, center=(0,0,0))
-    solid = Solid(mesh, CF4,CF4, black_surface)
+    solid = Solid(mesh, cf4,cf4, black_surface)
     return solid
 
 def detector_construction():
@@ -129,7 +63,7 @@ def detector_construction():
 
     # World
     World_mesh = make.cube(2)
-    World_solid = Solid(World_mesh, CF4, vacuum)
+    World_solid = Solid(World_mesh, cf4, cf4, black_surface)
     g.add_solid(World_solid)
     # treat the PV as the world, a 2*2*2 cube centered at (0,0,0)
 
@@ -137,7 +71,7 @@ def detector_construction():
     """ currently only 1 viewpoint is set, needs improvement
     """
     Sapphire_mesh = stl.mesh_from_stl('sapphire.stl')
-    Sapphire_solid = Solid(Sapphire_mesh, sapphire, CF4, detector_surface)
+    Sapphire_solid = Solid(Sapphire_mesh, sapphire, cf4, detector_surface)
     rot_sapphire = rotation_matrix(22.5*np.pi/180, 0, 0)
     h_cone = 0.060325
     pos_measure = np.array([(0.03750+0.02913+0.04603)/2+0.060325, 0, (0.34097+0.38421)/2])
@@ -149,7 +83,7 @@ def detector_construction():
 
     # head cones
     Head_mesh = stl.mesh_from_stl('head_cone.stl')
-    Head_solid = Solid(Head_mesh, CF4, CF4, black_surface) 
+    Head_solid = Solid(Head_mesh, cf4, cf4, black_surface) 
     # normal vector / optical axis: 28.16 degree to z axis
     # measured data above. Use 22.5 the design data instead.
     rot_head1 = rotation_matrix(22.5*np.pi/180, 0, 0)
@@ -177,7 +111,7 @@ def detector_construction():
     # dome reflectors
     # 8 pieces, thus treated in a for loop
     Dref_mesh = stl.mesh_from_stl('dome_ref.stl')
-    Dref_solid = Solid(Dref_mesh, PTFE, CF4, shiny_surface)
+    Dref_solid = Solid(Dref_mesh, cf4, cf4, teflon_surface)
     dr_dref = np.sqrt(0.01776 ** 2 + (0.07264+0.060325) ** 2) # difference in x-y plane
     dz_dref = 0.28018 # measured position in z
     t_plate = (-90 + 14.82) *np.pi/180 # slope of plate, 14.82 degree
@@ -193,35 +127,35 @@ def detector_construction():
     # includes 2 layers: inside and outside.
     Ojout_mesh = stl.mesh_from_stl('oj_out.stl')
     Ojin_mesh = stl.mesh_from_stl('oj_in.stl')
-    Ojout_solid = Solid(Ojout_mesh, quartz, CF4)
+    Ojout_solid = Solid(Ojout_mesh, quartz, cf4)
     pos_ojout = pos0 - np.array([0,0,0.0001])
     # make a bit room for distinction. moved outer part a bit lower
     rot_oj = rotation_matrix(0,0,0)
     g.add_solid(Ojout_solid, rot_oj, pos_ojout)
-    Ojin_solid = Solid(Ojin_mesh, LAr, quartz)
+    Ojin_solid = Solid(Ojin_mesh, argon, quartz)
     pos_ojin = pos0
     g.add_solid(Ojin_solid, rot_oj, pos_ojin)
 
     # Outer Jar reflector
     Oref_mesh = stl.mesh_from_stl('oj_ref.stl')
-    Oref_solid = Solid(Oref_mesh, PTFE, CF4, shiny_surface)
+    Oref_solid = Solid(Oref_mesh, cf4, cf4, teflon_surface)
     pos_oref = pos0
     g.add_solid(Oref_solid, rotation_matrix(0,0,0), pos_oref)
 
     # Inner Jar
     Ijout_mesh = stl.mesh_from_stl('ij_out.stl')
     Ijin_mesh = stl.mesh_from_stl('ij_in.stl')
-    Ijout_solid = Solid(Ijout_mesh, quartz, LAr)
+    Ijout_solid = Solid(Ijout_mesh, quartz, argon)
     pos_ijout = pos0 - np.array([0,0,0.0001])
     rot_ij = rotation_matrix(0,0,0)
     g.add_solid(Ijout_solid, rot_ij, pos_ijout)
-    Ijin_solid = Solid(Ijin_mesh, CF4, quartz)
+    Ijin_solid = Solid(Ijin_mesh, cf4, quartz)
     pos_ijin = pos0
     g.add_solid(Ijin_solid, rot_ij, pos_ijin)
 
     # Inner jar reflector
     Iref_mesh = stl.mesh_from_stl('ij_ref.stl')
-    Iref_solid = Solid(Iref_mesh, PTFE, CF4, shiny_surface)
+    Iref_solid = Solid(Iref_mesh, cf4, cf4, teflon_surface)
     pos_iref = pos0
     g.add_solid(Iref_solid, rotation_matrix(0,0,0), pos_iref)
 
