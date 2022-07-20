@@ -4,6 +4,7 @@ from chroma.transform import make_rotation_matrix
 from chroma.demo.optics import glass, water, vacuum, r7081hqe_photocathode
 from chroma.demo.optics import black_surface
 import numpy as np
+import random
 
 from chroma.sim import Simulation
 from chroma.sample import uniform_sphere
@@ -214,7 +215,52 @@ def photon_bomb(n,wavelength,pos):
     wavelengths = np.repeat(wavelength,n)
     return Photons(pos,dir,pol,wavelengths)
 
+def random_vector_2d():
+    # generate a random unit point on x-y plane
+    theta = 2*np.pi * random.random()
+    x = np.cos(theta)
+    y = np.sin(theta)
+    return np.array([x,y,0])
 
+def camera_illumination(wavelength, n):
+    # position and angle of camera, taken from detector construction
+    rot_camera = rotation_matrix(22.5*np.pi/180, 0, 0)
+    pos_camera = np.array([(0.03750+0.02913+0.04603)/2+0.060325, 0, (0.34097+0.38421)/2])
+    # radius of viewpoint
+    r_camera = 0.03647 / 2
+    # generate n random points on the viewpoint surface
+    pos_light = []
+    for i in range(n):
+        pos_light.append(r_camera* random_vector_2d())
+    pos_light = np.dot(np.array(pos_light), rot_camera) + pos_camera
+    dir_light = np.array([0, np.sin(22.5/180*np.pi), np.cos(22.5/180*np.pi)])
+
+    return point_source(wavelength, n, pos_light, dir_light)
+
+def triple_camera(wavelength, n):
+    rot_camera_1 = rotation_matrix(22.5*np.pi/180, 0, 0)
+    pos_camera_1 = np.array([(0.03750+0.02913+0.04603)/2+0.060325, 0, (0.34097+0.38421)/2])
+    rot_camera_2 = rotation_matrix(22.5*np.pi/180, 0, np.pi/3)
+    pos_camera_2 = np.dot(pos_camera_1,rotation_matrix(0,0,np.pi/3))
+    rot_camera_3 = rotation_matrix(22.5*np.pi/180, 0, 2*np.pi/3)
+    pos_camera_3 = np.dot(pos_camera_1,rotation_matrix(0,0,2*np.pi/3))
+    r_camera = 0.03647 / 2
+    pos_light = []
+    for i in range(n):
+        rnd = random.random()*3
+        if (rnd<1):
+            vec = np.dot(np.array(r_camera * random_vector_2d()), rot_camera_1) + pos_camera_1
+            pos_light.append(vec)
+        elif (rnd<2):
+            vec = np.dot(np.array(r_camera * random_vector_2d()), rot_camera_2) + pos_camera_2
+            pos_light.append(vec)
+        else:
+            vec = np.dot(np.array(r_camera * random_vector_2d()), rot_camera_3) + pos_camera_3
+            pos_light.append(vec)
+    pos_light = np.array(pos_light)
+    dir_light = np.array([0,0,-1])
+
+    return point_source(wavelength, n, pos_light, dir_light)
 
 if __name__ == '__main__':
 
@@ -253,3 +299,17 @@ if __name__ == '__main__':
         detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
 
     f2.close()
+
+    f3 = RootWriter('cam.root')
+
+    # sim.simulate() always returns an iterator even if we just pass
+    # a single photon bomb
+    for ev in sim.simulate([camera_illumination(400,1000)],
+                           keep_photons_beg=True,keep_photons_end=True,
+                           run_daq=False,max_steps=100):
+        # write the python event to a root file
+        f.write_event(ev)
+
+        detected = (ev.photons_end.flags & (0x1 << 2)).astype(bool)
+
+    f3.close()

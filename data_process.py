@@ -75,10 +75,23 @@ def equidistant_projection(theta, phi):
     j = j0 + int(f*theta / p *np.sin(phi))
     return np.array([i,j])
 
+def to_cylindrical(Row):
+    # from original cartesian coordinate to cylindrical coordinate
+    x = Row[1]
+    y = Row[2]
+    z = Row[3]
+    r = np.sqrt(x*x+y*y)
+    if x==0:
+        phi = np.pi/2
+    else:
+        phi = np.arctan(y/x)
+    return np.array(z, r, phi)
+
 if __name__ == '__main__':
     # name dependent on the time of running
     namestr = str(datetime.datetime.now())
     filename = sys.argv[1]
+    mode = sys.argv[2]
     # load data from input filename
     buffer = []
     """
@@ -94,7 +107,7 @@ if __name__ == '__main__':
     for i in len(df):
         point = equidistant_projection(repropagate_plane(recoordinate(np.array(df.loc[i]))))
         buffer.append(point)
-        
+    
     buffer = np.transpose(np.array(buffer))
     x = buffer[0]
     y = buffer[1]
@@ -103,3 +116,15 @@ if __name__ == '__main__':
 
     plt.hist2d(x,y)
     plt.savefig(namestr + '_hist.png')
+
+    if mode == "map":
+        buffer = []
+        df = pd.read_csv(filename, usecols=[1,2,3], dtype=float)
+        for i in len(df):
+            # i is a Row.
+            point = to_cylindrical(i)
+            buffer.append(point)
+        buffer = np.tranpose(np.array(buffer))
+        z, r, phi = buffer[:]
+        plt.hist2d(z, phi)
+        plt.savefig(namestr + '_hist.png')
